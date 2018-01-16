@@ -1,0 +1,10 @@
+lxc.id_map = u 0 {{ lxcguest_userns_start }} {{ lxcguest_userns_count }}
+lxc.id_map = g 0 {{ lxcguest_userns_start }} {{ lxcguest_userns_count }}
+
+lxc.network.type = veth
+lxc.network.flags = up
+lxc.network.link = {{ lxcguest_net_iface }}
+lxc.network.hwaddr = {{ lxcguest_net_mac }}
+
+# https://github.com/lxc/lxc/issues/1085
+lxc.haltsignal = SIGRTMIN+3

@@ -1,0 +1,2 @@
+lxcguest_systemd_unit: "lxc@{{ lxcguest_name }}.service"
+lxcguest_systemd_unit_d: "/etc/systemd/system/{{ lxcguest_systemd_unit }}.d"

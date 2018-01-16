@@ -1,0 +1,35 @@
+- name: Container config tempfile
+  tempfile:
+  register: lxcguest_config_file
+
+- name: Container config
+  template: src=unprivileged.j2 dest="{{ lxcguest_config_file.path }}"
+
+- name: Container created
+  command: /usr/bin/lxc-create --template download --config "{{ lxcguest_config_file.path }}" --name "{{ lxcguest_name | quote }}" -- --dist "{{ lxcguest_dist | default('debian') }}" --release "{{ lxcguest_release | default('stretch') }}" --arch "{{ lxcguest_release | default('amd64') }}"
+  changed_when: false
+
+- name: Container started
+  systemd:
+    name: "{{ lxcguest_systemd_unit }}"
+    state: started
+    enabled: True
+
+- name: Packages Python and SSH installed
+  command: /usr/bin/lxc-attach --name "{{ lxcguest_name|quote }}" -- /usr/bin/apt-get -q install -y python-minimal ssh
+  register: apt_install_result
+  until: apt_install_result.rc == 0
+  retries: 5
+  delay: 1
+  ignore_errors: yes
+  changed_when: '"\n0 upgraded, 0 newly installed" not in apt_install_result.stdout'
+
+- name: SSH directory for root user present
+  command: /usr/bin/lxc-attach --name "{{ lxcguest_name|quote }}" -- /bin/mkdir -p -m 700 /root/.ssh
+  changed_when: false
+
+- name: SSH authorized keys present
+  command: /usr/bin/lxc-attach --name "{{ lxcguest_name|quote }}" -- /usr/bin/tee /root/.ssh/authorized_keys
+  args:
+    stdin: "{{ lxcguest_authorized_keys }}"
+  changed_when: false

@@ -1,0 +1,30 @@
+- name: Systemd unit drop-in directory
+  file:
+    dest: "{{ lxcguest_systemd_unit_d }}"
+    state: directory
+
+- name: Systemd unit drop-in lxc-stop
+  register: lxcguest_systemd_unit_override_result
+  copy:
+    src: systemd-override-lxc-stop.conf
+    dest: "{{ lxcguest_systemd_unit_d }}/lxc-stop.conf"
+
+- name: Systemd reload
+  systemd: daemon_reload=yes
+  when: lxcguest_systemd_unit_override_result|changed
+
+- name: Container exists?
+  command: /usr/bin/lxc-info --name {{ lxcguest_name|quote }} -s
+  register: lxcguest_state
+  failed_when: lxcguest_state.rc < 0 or lxcguest_state.rc > 1
+  changed_when: false
+
+- name: Container install
+  import_tasks: "install-lxc.yml"
+  when: lxcguest_state.rc
+
+- name: Container running
+  systemd:
+    name: "{{ lxcguest_systemd_unit }}"
+    state: started
+    enabled: True

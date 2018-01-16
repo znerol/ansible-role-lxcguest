@@ -1,0 +1,8 @@
+lxcguest_name: "{{ inventory_hostname_short }}"
+
+lxcguest_userns_start: 0x1000000
+lxcguest_userns_count: 0x10000
+
+lxcguest_net_iface: lxcbr0
+lxcguest_net_mac: 00:16:3e:xx:xx:xx
+
